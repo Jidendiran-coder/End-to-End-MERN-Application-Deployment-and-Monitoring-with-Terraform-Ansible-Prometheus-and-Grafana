@@ -1,0 +1,71 @@
+- name: Install Node.js and npm
+  apt:
+    name: [nodejs, npm]
+    state: present
+    update_cache: yes
+
+- name: Install pm2 globally
+  npm:
+    name: pm2
+    global: yes
+
+- name: Clone TravelMemory repo
+  git:
+    repo: "{{ repo_url }}"
+    dest: "{{ app_dir }}"
+    version: main
+    force: yes
+
+- name: Create backend .env file
+  copy:
+    dest: "{{ app_dir }}/backend/.env"
+    content: |
+      MONGO_URI=mongodb://{{ db_user }}:{{ db_pass }}@{{ db_host }}:27017/{{ db_name }}
+      PORT={{ backend_port }}
+
+- name: Create frontend .env file
+  copy:
+    dest: "{{ app_dir }}/frontend/.env"
+    content: |
+      REACT_APP_BACKEND_URL=http://{{ ansible_host }}:{{ backend_port }}
+
+- name: Install backend dependencies
+  command: npm install
+  args:
+    chdir: "{{ app_dir }}/backend"
+
+- name: Install frontend dependencies
+  command: npm install
+  args:
+    chdir: "{{ app_dir }}/frontend"
+
+- name: Build frontend
+  command: npm run build
+  args:
+    chdir: "{{ app_dir }}/frontend"
+
+- name: Start backend with pm2 (if not running)
+  command: pm2 start index.js --name backend --watch
+  args:
+    chdir: "{{ app_dir }}/backend"
+  register: backend_pm2_start
+  failed_when: backend_pm2_start.rc not in [0,1]
+
+- name: Restart backend if already running
+  command: pm2 restart backend --update-env
+  when: backend_pm2_start.rc == 1
+
+- name: Start frontend with pm2 (if not running)
+  command: pm2 start npm --name frontend -- run start --watch
+  args:
+    chdir: "{{ app_dir }}/frontend"
+  register: frontend_pm2_start
+  failed_when: frontend_pm2_start.rc not in [0,1]
+
+- name: Restart frontend if already running
+  command: pm2 restart frontend --update-env
+  when: frontend_pm2_start.rc == 1
+
+- name: Save pm2 processes
+  command: pm2 save
+
