@@ -12,7 +12,7 @@ resource "aws_instance" "web" {
   }
 
   tags = {
-    Name = "mern-web"
+    Name = "Jid-mern-web"
   }
 }
 
@@ -28,6 +28,6 @@ resource "aws_instance" "db" {
   }
 
   tags = {
-    Name = "mern-db"
+    Name = "Jid-mern-db"
   }
 }
