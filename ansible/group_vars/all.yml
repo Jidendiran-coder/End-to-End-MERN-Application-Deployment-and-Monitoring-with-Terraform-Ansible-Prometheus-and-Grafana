@@ -6,7 +6,7 @@ backend_port: 3001
 frontend_port: 3000
 
 # DB details (used for backend .env)
-db_host: "13.127.79.71"
+db_host: "13.234.113.26"
 db_user: "traveluser"
 db_pass: "travelpass"
 db_name: "travelmemory"

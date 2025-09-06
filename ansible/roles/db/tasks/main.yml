@@ -22,3 +22,16 @@
     name: mongod
     state: started
     enabled: yes
+
+# ✅ Add this new task below
+- name: Create MongoDB application user
+  command: >
+    mongo travelmemory --eval
+    'db.createUser({user:"{{ db_user }}", pwd:"{{ db_pass }}", roles:[{role:"readWrite", db:"{{ db_name }}"}]})'
+  args:
+    creates: /opt/mongo_user_created.flag
+
+- name: Mark MongoDB user created
+  file:
+    path: /opt/mongo_user_created.flag
+    state: touch
